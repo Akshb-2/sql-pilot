@@ -1,146 +1,91 @@
-select *
-from layoffs_staging;
+-- Layoffs Data Processing Project
 
-create table layoffs_staging
-like layoffs;
+-- Step 1: Inspect Initial Data
+SELECT * FROM layoffs_staging;
 
-insert layoffs_staging
-select *
-from layoffs;
+-- Step 2: Create Staging Table from Original Table Structure
+CREATE TABLE layoffs_staging LIKE layoffs;
 
-select *,
-row_number() over(partition by company, location, industry, total_laid_off, percentage_laid_off, `date`, stage, country, funds_raised_millions) row_num
-from layoffs_staging;
+-- Step 3: Populate Staging Table with Data from Original Table
+INSERT INTO layoffs_staging
+SELECT * FROM layoffs;
 
-with Duplicate_cte as
-(
-select *,
-row_number() over(partition by company, location, industry, total_laid_off, percentage_laid_off, `date`, stage, country, funds_raised_millions) row_num
-from layoffs_staging
+-- Step 4: Identify Duplicate Records Using Window Functions
+SELECT *,
+ROW_NUMBER() OVER(PARTITION BY company, location, industry, total_laid_off, percentage_laid_off, `date`, stage, country, funds_raised_millions) AS row_num
+FROM layoffs_staging;
+
+-- Step 5: Filter Duplicate Records for Specific Company (Example: 'Casper')
+WITH Duplicate_cte AS (
+  SELECT *,
+  ROW_NUMBER() OVER(PARTITION BY company, location, industry, total_laid_off, percentage_laid_off, `date`, stage, country, funds_raised_millions) AS row_num
+  FROM layoffs_staging
 )
-select *
-from Duplicate_cte
-where company = 'Casper';
+SELECT * FROM Duplicate_cte
+WHERE company = 'Casper';
 
-CREATE TABLE `layoffs_staging2` (
-  `company` text,
-  `location` text,
-  `industry` text,
-  `total_laid_off` int DEFAULT NULL,
-  `percentage_laid_off` text,
-  `date` text,
-  `stage` text,
-  `country` text,
-  `funds_raised_millions` int DEFAULT NULL,
-  `row_num` int
+-- Step 6: Create Cleaned Staging Table with Row Number Column
+CREATE TABLE layoffs_staging2 (
+  company TEXT,
+  location TEXT,
+  industry TEXT,
+  total_laid_off INT DEFAULT NULL,
+  percentage_laid_off TEXT,
+  `date` TEXT,
+  stage TEXT,
+  country TEXT,
+  funds_raised_millions INT DEFAULT NULL,
+  row_num INT
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
-insert into layoffs_staging2
-select *,
-row_number() over(partition by company, location, industry, total_laid_off, percentage_laid_off, `date`, stage, country, funds_raised_millions) row_num
-from layoffs_staging;
+-- Step 7: Insert Data with Duplicate Row Numbering into Cleaned Table
+INSERT INTO layoffs_staging2
+SELECT *,
+ROW_NUMBER() OVER(PARTITION BY company, location, industry, total_laid_off, percentage_laid_off, `date`, stage, country, funds_raised_millions) AS row_num
+FROM layoffs_staging;
 
-select *
-from layoffs_staging2
-where company = 'casper';
+-- Step 8: Query Data for a Specific Company (Case-Insensitive Example)
+SELECT * FROM layoffs_staging2 WHERE company = 'casper';
 
-select company, trim(company)
-from layoffs_staging2
-;
+-- Step 9: Trim Leading/Trailing Spaces from Company Names
+UPDATE layoffs_staging2
+SET company = TRIM(company);
 
-update layoffs_staging2
-set company = trim(company);
+-- Step 10: Explore Distinct Locations and Industries
+SELECT DISTINCT location FROM layoffs_staging2 ORDER BY location;
+SELECT DISTINCT industry FROM layoffs_staging2 ORDER BY industry;
 
-select distinct location
-from layoffs_staging2
-order by 1
-;
+-- Step 11: Normalize Industry Names (e.g., set 'Crypto' industry)
+UPDATE layoffs_staging2
+SET industry = 'Crypto'
+WHERE industry LIKE 'Crypto%';
 
-select distinct industry
-from layoffs_staging2
-order by 1
-;
+-- Step 12: Clean Country Field (Remove trailing dots for 'United States')
+UPDATE layoffs_staging2
+SET country = TRIM('.' FROM country)
+WHERE country LIKE 'united states%';
 
-update layoffs_staging2
-set industry = 'Crypto'
-where industry like 'Crypto%';
+-- Step 13: Convert `date` Field to Proper DATE Data Type
+UPDATE layoffs_staging2
+SET `date` = STR_TO_DATE(`date`, '%m/%d/%Y');
 
-select distinct country, trim('.' from country)
-from layoffs_staging2
-where country like 'united states%'
-;
+ALTER TABLE layoffs_staging2
+MODIFY COLUMN `date` DATE;
 
-update layoffs_staging2
-set country = trim('.' from country)
-where country like 'united states%'
-;
+-- Step 14: Verify Data for Specific Company Example
+SELECT * FROM layoffs_staging2 WHERE company LIKE 'airbnb';
 
-update layoffs_staging2
-set `date` = str_to_date(`date`, '%m/%d/%Y');
+-- Step 15: Handle Missing Industry Values
+UPDATE layoffs_staging2
+SET industry = NULL
+WHERE industry = '';
 
-select `date`
-from layoffs_staging2;
+-- Step 16: Fill Missing Industry Data by Joining on Company
+UPDATE layoffs_staging2 t1
+JOIN layoffs_staging2 t2 ON t1.company = t2.company
+SET t1.industry = t2.industry
+WHERE t1.industry IS NULL AND t2.industry IS NOT NULL;
 
-alter table layoffs_staging2
-modify column `date` date;
-
-select *
-from layoffs_staging2
-where company like 'airbnb';
-
-
-update layoffs_staging2
-set industry = null
-where industry = '';
-
-select *
-from layoffs_staging2
-order by 3
-;
-
-select t1.industry, t2.industry
-from layoffs_staging2 t1
-join layoffs_staging2 t2
-	on t1.company = t2.company
-where t1.industry is null
-and t2.industry is not null
-;
-
-update layoffs_staging2 t1
-join layoffs_staging2 t2
-	on t1.company = t2.company
-set t1.industry = t2.industry
-where t1.industry is null and
-t2.industry is not null;
-
-select total_laid_off, percentage_laid_off
-from layoffs_staging2
-where total_laid_off is null and
-percentage_laid_off is null
-;
-
-delete
-from layoffs_staging2
-where total_laid_off is null and
-percentage_laid_off is null
-;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+-- Step 17: Remove Records Missing Layoff Counts and Percentages
+DELETE FROM layoffs_staging2
+WHERE total_laid_off IS NULL AND percentage_laid_off IS NULL;
