@@ -1,4 +1,6 @@
--- Layoffs Data Processing Project
+-- Layoffs Data Cleaning Project
+
+-- Functions used: SELECT, INSERT, CREATE TABLE, ROW_NUMBER(), CTE (WITH), TRIM(), LIKE, STR_TO_DATE(), ALTER TABLE, UPDATE, DELETE, JOIN, DISTINCT, ORDER BY, WHERE, IS NULL
 
 -- Step 1: Inspect Initial Data
 SELECT * FROM layoffs_staging;
