@@ -1,29 +1,104 @@
 -- ############################################################
--- # Restaurant Menu Analysis - SQL Project
--- ############################################################
--- Functions used: SELECT, COUNT(), AVG(), ORDER BY, WHERE, GROUP BY
+-- # 📂 Project: Restaurant Menu & Order Analysis (SQL)
 -- ############################################################
 
--- Find the number of items present on the menu
+-- 📌 Overview:
+-- This project explores a restaurant's menu and customer order data using SQL.
+-- It answers business questions like the most popular items, highest spending orders, 
+-- and category trends by joining menu_items and order_details tables.
+
+-- 🛠 SQL Functions Used:
+-- SELECT, COUNT(), MIN(), MAX(), AVG(), SUM(), ORDER BY, GROUP BY, HAVING, JOIN, LEFT JOIN, WHERE, DISTINCT, LIMIT
+
+-- ############################################################
+-- 🧠 Step-by-Step SQL Analysis
+-- ############################################################
+
+-- 1. Explore the menu_items table
+SELECT * FROM menu_items;
+
+-- 2. Count total items on the menu
 SELECT COUNT(*) FROM menu_items;
 
--- What are the least and most expensive items on the menu
+-- 3. Least and most expensive menu items
 SELECT * FROM menu_items ORDER BY price;
 SELECT * FROM menu_items ORDER BY price DESC;
 
--- How many Italian dishes are on the menu
+-- 4. Count Italian dishes on the menu
 SELECT COUNT(*) FROM menu_items WHERE category = 'Italian';
 
--- What are the least and most expensive Italian dishes
+-- 5. Least and most expensive Italian dishes
 SELECT * FROM menu_items WHERE category = 'Italian' ORDER BY price;
 SELECT * FROM menu_items WHERE category = 'Italian' ORDER BY price DESC;
 
--- How many dishes are in each category
-SELECT category, COUNT(menu_item_id) AS num_dishes
-FROM menu_items
-GROUP BY category;
+-- 6. Number of dishes in each category
+SELECT category, COUNT(menu_item_id) AS num_dishes FROM menu_items GROUP BY category;
 
--- What is the average dish price in each category
+-- 7. Average price per category
 SELECT category, COUNT(menu_item_id) AS num_dishes, AVG(price) AS avg_price_category
 FROM menu_items
 GROUP BY category;
+
+-- 8. Explore order_details table
+SELECT * FROM order_details WHERE order_id = 4305;
+
+-- 9. Check order date range
+SELECT * FROM order_details ORDER BY order_date;
+SELECT * FROM order_details ORDER BY order_date DESC;
+SELECT MIN(order_date), MAX(order_date) FROM order_details;
+
+-- 10. Count total orders
+SELECT COUNT(DISTINCT order_id) AS num_orders FROM order_details;
+
+-- 11. Count total items ordered
+SELECT COUNT(*) FROM order_details;
+
+-- 12. Orders with most number of items
+SELECT order_id, COUNT(item_id) AS num_items 
+FROM order_details
+GROUP BY order_id
+ORDER BY num_items DESC;
+
+-- 13. Orders with more than 12 items
+SELECT COUNT(*) AS num_orders 
+FROM (
+  SELECT order_id, COUNT(item_id) AS num_items 
+  FROM order_details
+  GROUP BY order_id
+  HAVING num_items > 12
+) AS num_orders;
+
+-- 14. Combine menu_items and order_details
+SELECT * FROM order_details od
+LEFT JOIN menu_items mi ON od.item_id = mi.menu_item_id;
+
+-- 15. Least and most ordered items, with category
+SELECT item_name, category, COUNT(order_details_id) AS num_purchase
+FROM order_details od
+LEFT JOIN menu_items mi ON od.item_id = mi.menu_item_id
+GROUP BY item_name, category
+ORDER BY num_purchase;
+
+-- 16. Top 5 highest spend orders
+SELECT order_id, SUM(price) AS total_price
+FROM order_details od
+LEFT JOIN menu_items mi ON od.item_id = mi.menu_item_id
+GROUP BY order_id
+ORDER BY total_price DESC
+LIMIT 5;
+
+-- 17. Details of the highest spend order (ID = 440)
+SELECT category, COUNT(order_details_id) AS count_category, SUM(price) AS total_price
+FROM order_details od
+LEFT JOIN menu_items mi ON od.item_id = mi.menu_item_id
+WHERE order_id = 440
+GROUP BY category
+ORDER BY count_category DESC;
+
+-- 18. Category breakdown for top 5 highest spend orders
+SELECT category, COUNT(order_details_id) AS count_category
+FROM order_details od
+LEFT JOIN menu_items mi ON od.item_id = mi.menu_item_id
+WHERE order_id IN (404, 2075, 1957, 330, 2675)
+GROUP BY category
+ORDER BY count_category DESC;
