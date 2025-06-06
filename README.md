@@ -1,2 +1,2 @@
-# sql-pilot
-My sql projects
+# Portfolio Projects
+Following are my projects in SQL
