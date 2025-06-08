@@ -1,5 +1,5 @@
 # Portfolio Projects
-Following are my projects in SQL
+Following are my projects in SQL & MS Excel
 
 
 - [x] **SQL** - 
