@@ -9,8 +9,8 @@ Following are my projects in SQL & MS Excel
   - Restaurant Menu Analysis  <br />
 *Review the SQL Script:* **[HERE](https://github.com/Akshb-2/sql-pilot/blob/DataAnalystPortfolioProjects/Restaurant%20Menu%20Analysis%20-%20SQL%20Project)**<br />
 
-- Restaurant Menu Analysis  <br />
-*Review the SQL Script:* **[HERE](https://github.com/Akshb-2/sql-pilot/blob/DataAnalystPortfolioProjects/Restaurant%20Menu%20Analysis%20-%20SQL%20Project)**<br />
+  - WalmartSalesAnalysis  <br />
+*Review the SQL Script:* **[HERE](https://github.com/Akshb-2/sql-pilot/blob/DataAnalystPortfolioProjects/WalmartSalesAnalysis)**<br />
 
 
 - [x] **Excel** - 
